@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DARSH — @dxrsh.h</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080808;
+    --lime: #c8ff00;
+    --pink: #ff2d78;
+    --white: #f2f2f2;
+    --gray: #888;
+    --card-bg: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  /* GRAIN */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.5;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed; width: 12px; height: 12px;
+    background: var(--lime); border-radius: 50%;
+    pointer-events: none; z-index: 10000;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+    mix-blend-mode: difference;
+  }
+  #cursor-ring {
+    position: fixed; width: 36px; height: 36px;
+    border: 1.5px solid var(--lime); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, width 0.3s, height 0.3s, border-color 0.3s;
+    mix-blend-mode: difference;
+  }
+  body:hover #cursor { opacity: 1; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95) 0%, transparent 100%);
+  }
+  .nav-logo {
+    font-family: 'Syne Mono', monospace;
+    font-size: 1rem; letter-spacing: 0.15em;
+    color: var(--lime); text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gray); text-decoration: none;
+    transition: color 0.25s;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 8vw;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+  .hero-bg-circle.c1 {
+    width: 600px; height: 600px;
+    background: rgba(200,255,0,0.12);
+    top: -100px; right: -150px;
+    animation: pulse 6s ease-in-out infinite alternate;
+  }
+  .hero-bg-circle.c2 {
+    width: 400px; height: 400px;
+    background: rgba(255,45,120,0.1);
+    bottom: -50px; left: -80px;
+    animation: pulse 8s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.18); } }
+
+  .hero-tag {
+    font-family: 'Syne Mono', monospace;
+    font-size: 0.78rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--lime); margin-bottom: 20px;
+    opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-name {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(5rem, 14vw, 13rem);
+    font-weight: 800; line-height: 0.88;
+    letter-spacing: -0.03em;
+    position: relative; display: inline-block;
+    opacity: 0; animation: fadeUp 0.9s 0.4s forwards;
+  }
+  .hero-name .glitch {
+    position: relative; display: inline-block;
+  }
+  .hero-name .glitch::before,
+  .hero-name .glitch::after {
+    content: attr(data-text);
+    position: absolute; top: 0; left: 0;
+    font-family: inherit; font-size: inherit; font-weight: inherit;
+    color: inherit;
+  }
+  .hero-name .glitch::before {
+    color: var(--pink);
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+    transform: translate(-3px, 0);
+    animation: glitch1 4s infinite;
+  }
+  .hero-name .glitch::after {
+    color: var(--lime);
+    clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+    transform: translate(3px, 0);
+    animation: glitch2 4s infinite;
+  }
+  @keyframes glitch1 {
+    0%,90%,100% { transform: translate(0); opacity: 0; }
+    92% { transform: translate(-4px, 1px); opacity: 1; }
+    94% { transform: translate(3px, -1px); opacity: 1; }
+    96% { transform: translate(-2px, 0); opacity: 0; }
+  }
+  @keyframes glitch2 {
+    0%,90%,100% { transform: translate(0); opacity: 0; }
+    92% { transform: translate(4px, -1px); opacity: 1; }
+    94% { transform: translate(-3px, 1px); opacity: 1; }
+    96% { transform: translate(2px, 0); opacity: 0; }
+  }
+
+  .hero-sub {
+    margin-top: 28px;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    color: var(--gray);
+    font-weight: 300; letter-spacing: 0.01em;
+    max-width: 480px;
+    opacity: 0; animation: fadeUp 0.9s 0.7s forwards;
+  }
+  .hero-sub .highlight { color: var(--white); font-weight: 500; }
+
+  .hero-cta-row {
+    margin-top: 48px; display: flex; gap: 16px; align-items: center;
+    opacity: 0; animation: fadeUp 0.9s 1s forwards;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--lime); color: #080808;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.88rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 14px 28px; text-decoration: none;
+    border: none; cursor: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--pink); }
+  .btn-outline {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1.5px solid var(--border); color: var(--white);
+    font-size: 0.88rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 14px 28px; text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--white); }
+
+  .hero-scroll {
+    position: absolute; bottom: 36px; left: 8vw;
+    display: flex; align-items: center; gap: 14px;
+    font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gray);
+    opacity: 0; animation: fadeUp 1s 1.4s forwards;
+  }
+  .scroll-line {
+    width: 48px; height: 1px; background: var(--gray);
+    position: relative; overflow: hidden;
+  }
+  .scroll-line::after {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: var(--lime);
+    animation: slideLine 2s 1.6s ease-in-out infinite;
+  }
+  @keyframes slideLine { 0%{left:-100%} 100%{left:100%} }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── ABOUT ─── */
+  section { padding: 120px 8vw; }
+
+  .section-label {
+    font-family: 'Syne Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--lime); margin-bottom: 48px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); max-width: 80px; }
+
+  #about { position: relative; }
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    align-items: center;
+  }
+  .about-photo-wrap {
+    position: relative;
+  }
+  .about-photo {
+    width: 100%; aspect-ratio: 4/5; object-fit: cover;
+    display: block;
+    border: 1px solid var(--border);
+  }
+  .about-photo-placeholder {
+    width: 100%; aspect-ratio: 4/5;
+    background: linear-gradient(135deg, rgba(200,255,0,0.08), rgba(255,45,120,0.08));
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; color: var(--gray);
+    font-family: 'Syne Mono', monospace; font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
+  .photo-tag {
+    position: absolute; bottom: -16px; right: -16px;
+    background: var(--lime); color: #080808;
+    padding: 10px 18px;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .about-text h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(2.2rem, 4vw, 3.4rem); line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  .about-text h2 span { color: var(--lime); }
+  .about-text p {
+    font-size: 1.05rem; line-height: 1.75; color: var(--gray);
+    margin-bottom: 20px;
+  }
+  .about-text p strong { color: var(--white); font-weight: 500; }
+  .stats-row {
+    display: flex; gap: 40px; margin-top: 40px; padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .stat span { display: block; }
+  .stat .num {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 2.2rem; color: var(--lime);
+  }
+  .stat .lbl {
+    font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gray); margin-top: 4px;
+  }
+
+  /* ─── HOBBIES ─── */
+  #hobbies { background: rgba(255,255,255,0.01); }
+  .hobbies-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 60px;
+  }
+  .hobbies-title {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.1;
+  }
+  .hobbies-title em { font-style: normal; color: var(--pink); }
+  .hobbies-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  }
+  .hobby-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 40px 32px;
+    position: relative; overflow: hidden;
+    transition: background 0.3s, border-color 0.3s;
+    cursor: none;
+  }
+  .hobby-card::before {
+    content: ''; position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,255,0,0.05) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .hobby-card:hover { background: rgba(255,255,255,0.07); border-color: var(--lime); }
+  .hobby-card:hover::before { opacity: 1; }
+  .hobby-icon {
+    font-size: 2.4rem; margin-bottom: 20px;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .hobby-card:hover .hobby-icon { transform: scale(1.2) rotate(-5deg); }
+  .hobby-card h3 {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 1.15rem; margin-bottom: 10px;
+  }
+  .hobby-card p { font-size: 0.9rem; color: var(--gray); line-height: 1.6; }
+  .hobby-num {
+    position: absolute; top: 20px; right: 24px;
+    font-family: 'Syne Mono', monospace; font-size: 0.7rem;
+    color: var(--border); letter-spacing: 0.1em;
+  }
+
+  /* ─── VIBE / MARQUEE ─── */
+  #vibe {
+    padding: 60px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .marquee-track {
+    display: flex; gap: 48px; width: max-content;
+    animation: marquee 18s linear infinite;
+  }
+  .marquee-track:hover { animation-play-state: paused; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee-item {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.5rem; white-space: nowrap;
+    color: transparent; -webkit-text-stroke: 1.5px var(--border);
+    letter-spacing: 0.05em;
+    transition: color 0.3s, -webkit-text-stroke 0.3s;
+  }
+  .marquee-item.accent { color: var(--lime); -webkit-text-stroke: 0; }
+  .marquee-item:hover { color: var(--white); -webkit-text-stroke: 0; }
+
+  /* ─── PHOTOS ─── */
+  #photos { }
+  .photos-intro h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(2rem,4vw,3.2rem);
+    margin-bottom: 16px;
+  }
+  .photos-intro p { color: var(--gray); font-size: 1rem; margin-bottom: 48px; }
+  .photos-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 3px;
+  }
+  .photo-slot {
+    background: linear-gradient(135deg, rgba(200,255,0,0.05), rgba(255,45,120,0.05));
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+    color: var(--gray);
+    font-family: 'Syne Mono', monospace; font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    transition: background 0.3s;
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-slot:hover { background: rgba(255,255,255,0.04); }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-slot.tall { grid-row: span 2; min-height: 520px; }
+  .photo-slot.normal { min-height: 250px; }
+  .add-photo-icon { font-size: 2rem; opacity: 0.4; }
+
+  /* ─── INSTAGRAM CTA ─── */
+  #insta {
+    padding: 100px 8vw; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .insta-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,45,120,0.12) 0%, transparent 70%);
+  }
+  .insta-content { position: relative; z-index: 1; }
+  .insta-pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(255,45,120,0.12); border: 1px solid rgba(255,45,120,0.3);
+    padding: 8px 20px; border-radius: 100px;
+    font-family: 'Syne Mono', monospace; font-size: 0.75rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--pink); margin-bottom: 32px;
+  }
+  .insta-dot { width: 7px; height: 7px; background: var(--pink); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  #insta h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(2.5rem, 6vw, 5.5rem); line-height: 1.05;
+    margin-bottom: 20px;
+  }
+  #insta h2 .handle { color: var(--pink); }
+  #insta p { color: var(--gray); font-size: 1.1rem; margin-bottom: 48px; max-width: 500px; margin-left: auto; margin-right: auto; }
+  .insta-btn {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, #f9026e, #ff5a00, #ffdc00);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 18px 40px; text-decoration: none;
+    border: none; cursor: none;
+    transition: transform 0.25s, box-shadow 0.25s;
+    position: relative; overflow: hidden;
+  }
+  .insta-btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(255,255,255,0.15);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .insta-btn:hover::after { transform: scaleX(1); }
+  .insta-btn:hover { transform: scale(1.04); box-shadow: 0 20px 60px rgba(255,45,120,0.35); }
+  .insta-btn svg { width: 22px; height: 22px; }
+  .insta-username {
+    margin-top: 20px; font-family: 'Syne Mono', monospace;
+    font-size: 0.9rem; color: var(--gray); letter-spacing: 0.12em;
+  }
+  .insta-username a { color: var(--pink); text-decoration: none; }
+  .insta-username a:hover { text-decoration: underline; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 40px 8vw;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-copy { font-size: 0.78rem; color: var(--gray); }
+  .footer-copy span { color: var(--lime); }
+  .footer-back {
+    font-family: 'Syne Mono', monospace; font-size: 0.75rem;
+    color: var(--gray); text-decoration: none; letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+  .footer-back:hover { color: var(--white); }
+
+  /* ─── SCROLL REVEAL ─── */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s, transform 0.8s; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+  .reveal-delay-5 { transition-delay: 0.5s; }
+
+  /* ─── RESPONSIVE ─── */
+  @media(max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    section { padding: 80px 6vw; }
+    .about-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hobbies-grid { grid-template-columns: 1fr 1fr; }
+    .photos-grid { grid-template-columns: 1fr 1fr; }
+    .photo-slot.tall { grid-row: span 1; min-height: 260px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+  @media(max-width: 600px) {
+    .hobbies-grid { grid-template-columns: 1fr; }
+    .photos-grid { grid-template-columns: 1fr; }
+    .hero-cta-row { flex-direction: column; align-items: flex-start; }
+    .stats-row { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">DARSH</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#hobbies">Vibes</a></li>
+    <li><a href="#photos">Gallery</a></li>
+    <li><a href="#insta">Instagram</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-circle c1"></div>
+  <div class="hero-bg-circle c2"></div>
+
+  <div class="hero-tag">✦ portfolio · 2025</div>
+
+  <h1 class="hero-name">
+    <span class="glitch" data-text="DARSH">DARSH</span>
+  </h1>
+
+  <p class="hero-sub">
+    <span class="highlight">Just a vibe you can't ignore.</span><br/>
+    Living life loud, creating louder.
+  </p>
+
+  <div class="hero-cta-row">
+    <a class="btn-primary" href="#insta">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      Follow @dxrsh.h
+    </a>
+    <a class="btn-outline" href="#about">Know me ↓</a>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">01 — About me</div>
+  <div class="about-grid">
+    <div class="about-photo-wrap reveal">
+      <img class="about-photo" src="https://cdn.nexapk.in/image48.webp" alt="Darsh" />
+      <div class="photo-tag">DARSH ✦</div>
+    </div>
+    <div class="about-text">
+      <h2 class="reveal reveal-delay-1">The guy behind<br/><span>the handle.</span></h2>
+      <p class="reveal reveal-delay-2">
+        Hey! I'm <strong>Darsh</strong> — a vibe-first, think-later kinda person who finds beauty in the chaos of everyday life. Somewhere between <strong>candid moments</strong> and curated aesthetics.
+      </p>
+      <p class="reveal reveal-delay-3">
+        I'm that person who notices the light at golden hour, laughs too loud at memes, and somehow makes everything look good. <strong>Gen-Z energy, old-soul heart.</strong>
+      </p>
+      <div class="stats-row reveal reveal-delay-4">
+        <div class="stat">
+          <span class="num">∞</span>
+          <span class="lbl">Vibes</span>
+        </div>
+        <div class="stat">
+          <span class="num">100%</span>
+          <span class="lbl">Authentic</span>
+        </div>
+        <div class="stat">
+          <span class="num">24/7</span>
+          <span class="lbl">Online</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div id="vibe">
+  <div class="marquee-track">
+    <span class="marquee-item">DARSH</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">@DXRSH.H</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">GOOD VIBES ONLY</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">LIVING LOUD</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">DARSH</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">@DXRSH.H</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">GOOD VIBES ONLY</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">LIVING LOUD</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">DARSH</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">@DXRSH.H</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">GOOD VIBES ONLY</span>
+    <span class="marquee-item accent">✦</span>
+    <span class="marquee-item">LIVING LOUD</span>
+    <span class="marquee-item accent">✦</span>
+  </div>
+</div>
+
+<!-- HOBBIES -->
+<section id="hobbies">
+  <div class="section-label">02 — What I'm into</div>
+  <div class="hobbies-header">
+    <h2 class="hobbies-title reveal">My <em>hobbies</em><br/>& interests</h2>
+  </div>
+  <div class="hobbies-grid">
+    <div class="hobby-card reveal">
+      <span class="hobby-num">01</span>
+      <span class="hobby-icon">📷</span>
+      <h3>Photography</h3>
+      <p>Capturing moments before they disappear. Golden hour, candid shots, street life — anything real and raw.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-1">
+      <span class="hobby-num">02</span>
+      <span class="hobby-icon">🎵</span>
+      <h3>Music</h3>
+      <p>From late night lo-fi to full volume bangers. Music is literally a whole mood, always.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-2">
+      <span class="hobby-num">03</span>
+      <span class="hobby-icon">🎮</span>
+      <h3>Gaming</h3>
+      <p>Controller in hand, snacks nearby. The grind never stops when you're in the zone.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-3">
+      <span class="hobby-num">04</span>
+      <span class="hobby-icon">✈️</span>
+      <h3>Exploring</h3>
+      <p>New places, new faces, new energy. Every trip is a story waiting to happen.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-4">
+      <span class="hobby-num">05</span>
+      <span class="hobby-icon">💻</span>
+      <h3>Developing</h3>
+      <p>Building things from scratch — websites, apps, tools. If it can be coded, it can be created.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-5">
+      <span class="hobby-num">06</span>
+      <span class="hobby-icon">🕶️</span>
+      <h3>Hacking</h3>
+      <p>Ethical hacking, CTFs, finding what's broken before the bad guys do. The real dark art.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-2">
+      <span class="hobby-num">07</span>
+      <span class="hobby-icon">🎨</span>
+      <h3>Aesthetic</h3>
+      <p>Curating life like it's a mood board. Colors, textures, vibes — it all matters.</p>
+    </div>
+    <div class="hobby-card reveal reveal-delay-3">
+      <span class="hobby-num">08</span>
+      <span class="hobby-icon">🍕</span>
+      <h3>Foodie</h3>
+      <p>Food is culture, food is love. Always down to try something new and unexpected.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PHOTOS -->
+<section id="photos">
+  <div class="section-label">03 — Gallery</div>
+  <div class="photos-intro">
+    <h2 class="reveal">Moments that<br/>matter.</h2>
+    <p class="reveal reveal-delay-1">A glimpse into my world — add your photos here to complete the vibe.</p>
+  </div>
+  <div class="photos-grid reveal">
+    <div class="photo-slot tall">
+      <img src="https://cdn.nexapk.in/image48.webp" alt="Darsh" />
+    </div>
+    <div class="photo-slot normal">
+      <img src="https://cdn.nexapk.in/image49.webp" alt="Darsh" />
+    </div>
+    <div class="photo-slot normal">
+      <img src="https://cdn.nexapk.in/image50.webp" alt="Darsh" />
+    </div>
+    <div class="photo-slot normal">
+      <img src="https://cdn.nexapk.in/image49.webp" alt="Darsh" style="object-position: top;" />
+    </div>
+    <div class="photo-slot normal">
+      <img src="https://cdn.nexapk.in/image50.webp" alt="Darsh" style="object-position: bottom;" />
+    </div>
+  </div>
+</section>
+
+<!-- INSTAGRAM CTA -->
+<section id="insta">
+  <div class="insta-bg"></div>
+  <div class="insta-content">
+    <div class="insta-pill reveal">
+      <div class="insta-dot"></div>
+      Live on Instagram
+    </div>
+    <h2 class="reveal reveal-delay-1">
+      Come find me<br/>as <span class="handle">@dxrsh.h</span>
+    </h2>
+    <p class="reveal reveal-delay-2">
+      My real life, unfiltered (kinda). Daily doses of vibes, laughs, and moments you don't want to miss. 👀
+    </p>
+    <div class="reveal reveal-delay-3">
+      <a class="insta-btn" href="https://www.instagram.com/dxrsh.h?igsh=OG9rdGR5eHdyd2Vw" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+        Visit My Instagram
+      </a>
+    </div>
+    <div class="insta-username reveal reveal-delay-4">
+      or find me directly at <a href="https://www.instagram.com/dxrsh.h?igsh=OG9rdGR5eHdyd2Vw" target="_blank">instagram.com/dxrsh.h</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-copy">Made with 🤍 — <span>DARSH</span> © 2025</div>
+  <a class="footer-back" href="#hero">Back to top ↑</a>
+</footer>
+
+<script>
+// ─── CUSTOM CURSOR ───
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+function animCursor(){
+  cur.style.left = mx+'px'; cur.style.top = my+'px';
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx+'px'; ring.style.top = ry+'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+document.querySelectorAll('a, button, .hobby-card').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cur.style.transform = 'translate(-50%,-50%) scale(2.5)';
+    ring.style.width = '60px'; ring.style.height = '60px';
+    ring.style.borderColor = 'var(--pink)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cur.style.transform = 'translate(-50%,-50%) scale(1)';
+    ring.style.width = '36px'; ring.style.height = '36px';
+    ring.style.borderColor = 'var(--lime)';
+  });
+});
+
+// ─── SCROLL REVEAL ───
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(el => obs.observe(el));
+
+// ─── NAV SCROLL EFFECT ───
+window.addEventListener('scroll', () => {
+  document.querySelector('nav').style.backdropFilter = window.scrollY > 50 ? 'blur(20px)' : 'none';
+});
+</script>
+</body>
+</html>
